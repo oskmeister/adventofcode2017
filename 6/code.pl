@@ -42,10 +42,16 @@ for my $each(@input_row) {
 }
 my %seen;
 my @cur = @numbers;
-my $steps = 0;
-while (!$seen{hash(@cur)}) {
-    $seen{hash(@cur)} = 1;
+my $steps = 1;
+while (1) {
+    if ($seen{hash(@cur)}) {
+        my $diff = $steps - $seen{hash(@cur)};
+        print "Saw state $diff steps ago.\n";
+        last;
+    }
+    $seen{hash(@cur)} = $steps;
     @cur = iterate(@cur);
     $steps++;
 }
-print "Finished in $steps steps.\n";
+$steps--;
+print "Finished in $steps total steps.\n";
