@@ -22,6 +22,27 @@ int contains(char **list, char *str) {
     return found;
 }
 
+int find_lowest_unbalanced(int at, int *adj_matr, struct Node **nodes, int n_nodes, int *result, int print, int d) {
+    int i;
+    int totsum = nodes[at]->weight;
+    int prevsum = -1;
+    for (i = 0; i < n_nodes; ++i) {
+        if (adj_matr[at * n_nodes + i] == 1) {
+            int sum = find_lowest_unbalanced(i, adj_matr, nodes, n_nodes, result, print, d+1);
+            if (prevsum != -1 && sum != prevsum) {
+                if (*result == -1) *result = at;
+            }
+            prevsum = sum;
+            totsum += sum;
+        }
+    }
+    if (print == 1) {
+        for (i = 0; i < d; ++i) printf("  ");
+        printf("%d under %s\n", totsum, nodes[at]->name);
+    }
+    return totsum;
+}
+
 struct Node *parse_node(char *line) {
     size_t buffer_size = 500;
     char *node_name = (char *) malloc(sizeof(char) * buffer_size);
@@ -55,21 +76,33 @@ void read_tree() {
         nodes[n_nodes++] = parse_node(buffer);
     }
 
+    int *adj_matr = calloc(n_nodes * n_nodes, sizeof(int));
+
     int i, j;
     for (i = 0; i < n_nodes; ++i) {
         for (j = 0; j < n_nodes; ++j) {
             if (i == j) continue;
             if (contains(nodes[j]->neigh, nodes[i]->name)) {
                 nodes[i]->num_in++;
+                adj_matr[j * n_nodes + i] = 1;
             }
         }
     }
 
+    int root = 0;
     for (i = 0; i < n_nodes; ++i) {
         if (nodes[i]->num_in == 0) {
             printf("%s has no in-edges\n", nodes[i]->name);
+            root = i;
+            break;
         }
     }
+
+    int result = -1;
+    find_lowest_unbalanced(root, adj_matr, nodes, n_nodes, &result, 0, 0);
+
+    int irrelevant = -1;
+    find_lowest_unbalanced(result, adj_matr, nodes, n_nodes, &irrelevant, 1, 0);
 
     free(buffer);
 }
