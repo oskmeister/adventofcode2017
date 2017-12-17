@@ -1,55 +1,69 @@
 #include <iostream>
 #include <algorithm>
 #include <vector>
+#include <set>
 #include <string>
 
 using namespace std;
 
-std::function<string(string,int)> generate_perm() {
-    string order;
+struct Instruction {
+    int type;
+    int a, b;
+    char c1, c2;
+};
 
-    for (char c = 'a'; c <= 'p'; ++c) order.push_back(c);
-
+int main() {
+    vector<Instruction> program;
     for (;;) {
         string s;
         if (!(cin >> s)) break;
         if (s == "spin") {
             int a;
             cin >> a;
-            rotate(order.rbegin(), order.rbegin() + a, order.rend());
+            Instruction i = {0, a, 0, 'a', 'a'};
+            program.push_back(i);
         } else if (s == "swap") {
             int a, b;
             cin >> a >> b;
-            swap(order[a], order[b]);
+            Instruction i = {1, a, b, 'a', 'a'};
+            program.push_back(i);
         } else if (s == "swapname") {
             char a, b;
             cin >> a >> b;
-            auto ai = find(order.begin(), order.end(), a);
-            auto bi = find(order.begin(), order.end(), b);
-            swap(*ai, *bi);
+            Instruction i = {2, 0, 0, a, b};
+            program.push_back(i);
         }
     }
 
-    vector<int> perm(16);
-    for (int i = 0; i < 16; ++i) {
-        perm[i] = find(order.begin(), order.end(), ('a'+i)) - order.begin();
-    }
-
-    return [perm](const string &s, int iterations) {
-        string result(16, 'a');
-        for (int i = 0; i < 16; ++i) {
-            result[perm[i]] = s[i];
-        }
-        return result;
-    };
-}
-
-int main() {
-    auto f = generate_perm();
     string order;
     for (char c = 'a'; c <= 'p'; ++c) order.push_back(c);
-    auto result = f(order, 1);
-    cout << "Once: " << result << endl;
-    for (int i = 0; i < 999999999; ++i) result = f(result, 1);
-    cout << "10^9: " << result << endl;
+
+    set<string> seen;
+    seen.insert(order);
+
+    vector<string> history;
+    history.push_back(order);
+
+    for (;;) {
+        for (Instruction i : program) {
+            if (i.type == 0) {
+                rotate(order.rbegin(), order.rbegin() + i.a, order.rend());
+            } else if (i.type == 1) {
+                swap(order[i.a], order[i.b]);
+            } else if (i.type == 2) {
+                auto ai = find(order.begin(), order.end(), i.c1);
+                auto bi = find(order.begin(), order.end(), i.c2);
+                swap(*ai, *bi);
+            }
+        }
+        if (seen.find(order) != seen.end()) {
+            cout << "Cycle found after " << history.size() << " moves" << endl;
+            break;
+        }
+        seen.insert(order);
+        history.push_back(order);
+    }
+
+    cout << "First: " << history[1] << endl;
+    cout << "Billionth: " << history[1000000000 % history.size()] << endl;
 }
