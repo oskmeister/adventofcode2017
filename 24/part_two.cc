@@ -17,15 +17,15 @@ pair<int, int> solve(int cur, long long bits) {
         const int to_add = p.first + p.second;
         if (p.first == cur) {
             auto p1 = solve(p.second, bits | (1LL << i));
-            p1 += 1;
-            p2 += to_add;
+            p1.first += 1;
+            p1.second += to_add;
             if (p1 > ans) ans = p1;
         }
-        if (p.first == cur) {
-            auto p1 = solve(p.first, bits | (1LL << i));
-            p1 += 1;
-            p2 += to_add;
-            if (p1 > ans) ans = p1;
+        if (p.second == cur) {
+            auto p2 = solve(p.first, bits | (1LL << i));
+            p2.first += 1;
+            p2.second += to_add;
+            if (p2 > ans) ans = p2;
         }
     }
     cache[make_pair(cur, bits)] = ans;
